@@ -1,11 +1,9 @@
-import csv
 import numpy as np
 import umap
 import pandas as pd
 import seaborn as sns
 from sklearn.datasets import load_digits, load_iris
 import matplotlib.pyplot as plt
-from sklearn.datasets import load_digits
 
 ## Iris Dataset
 

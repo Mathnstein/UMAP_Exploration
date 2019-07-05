@@ -1,0 +1,5 @@
+numpy
+umap-learn
+sklearn
+pandas
+matplotlib
