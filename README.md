@@ -9,7 +9,7 @@ You may find the Arxvix paper on the Surrey study [here](https://arxiv.org/abs/1
 # Getting Started
 
 Once you have cloned the repo, open a terminal and run:
-```python setup.py```
+```python setup.py install```
 This will install all necessary dependencies for the code.
 
 ## Required packaged installed
