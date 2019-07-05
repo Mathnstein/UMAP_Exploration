@@ -12,6 +12,9 @@ Once you have cloned the repo, open a terminal and run:
 ```python setup.py install```
 This will install all necessary dependencies for the code.
 
+A simple script to run UMAP embedding on the NIST digits and iris datasets can be run through
+```python exploration.py```
+
 ## Required packaged installed
 
 ```
