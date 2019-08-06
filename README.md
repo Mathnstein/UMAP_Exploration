@@ -23,6 +23,7 @@ umap-learn
 sklearn
 pandas
 matplotlib
+pyshp
 ```
 
 
