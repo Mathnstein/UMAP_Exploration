@@ -21,7 +21,7 @@ edi_var = 'PCTPHYRI_2'
 
 plt.figure()
 min, max = (0, 1)
-step = .02
+step = .05
 viridis = cm.get_cmap('viridis')
 # Using contourf to provide my colorbar info, then clearing the figure
 Z = [[0,0],[0,0]]
@@ -44,12 +44,20 @@ for poly, shape in zip(sf.shapes(), sf.shapeRecords()):
     if len(edi_row_idx> 0):
         edi_row_idx = int(edi_row_idx)
         val = neighbor_data.iloc[edi_row_idx][edi_var]
-        color_rgb = viridis(val/100)
-        color_hex = matplotlib.colors.rgb2hex(color_rgb)
+        if np.isnan(val):
+            print('The following N_code is nan')
+            print(N_code, neighborhood, city)
+            color_hex = '#000000'
+        else:
+            color_rgb = viridis(val/100)
+            color_hex = matplotlib.colors.rgb2hex(color_rgb)
     else:
+        #The N_code did not exist
+        print('The following N_codes did not appear in the edi speadsheet')
+        print(N_code, neighborhood, city)
         color_hex = '#ffffff'
     poly_geo=poly.__geo_interface__
-    ax.add_patch(PolygonPatch(poly_geo, fc=color_hex, ec='#000000', alpha=0.5, zorder=2 ))
+    ax.add_patch(PolygonPatch(poly_geo, fc=color_hex, ec='#000000', alpha=1, zorder=2 ))
     N_codes.append(N_code)
     neighborhoods.append(neighborhood)
     citys.append(city)
