@@ -1,0 +1,10 @@
+# VSCode
+.vscode
+
+# venv
+.venv
+
+# package
+dist
+build
+**.egg-info

@@ -1,8 +1,0 @@
-numpy
-umap-learn
-sklearn
-pandas
-matplotlib
-pyshp
-xlrd
-descartes
