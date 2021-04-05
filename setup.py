@@ -15,11 +15,9 @@ install_requires = [
     'pandas >= 1.2, < 1.3',
     'matplotlib >= 3.3, < 3.4',
     'seaborn >= 0.11, < 0.12',
-    'pyshp >= 2.1, < 2.2',
-    'openpyxl >= 3.0, < 3.1',
-    'descartes >= 1.1, < 1.2',
     'ipywidgets >= 7.6, < 7.7',
-    'geopandas >= 0.9, < 1.0'
+    'geopandas >= 0.9, < 1.0',
+    'bokeh >= 2.3, <2.3.1'
 ] 
 
 setup(
