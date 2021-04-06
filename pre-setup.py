@@ -13,7 +13,7 @@ ind = ind[0]
 depend_links.insert(0, depend_links.pop(ind))
 for whl in depend_links:
     whl = os.path.join(whlPath, whl)
-    subprocess.call(['python', '-m', 'pip', 'install', whl])
+    subprocess.call(['pip', 'install', whl])
 
 # Once finished, call full setup
 subprocess.call(['pip', 'install', '-e', '.'])
