@@ -16,6 +16,7 @@ install_requires = [
     'matplotlib >= 3.3, < 3.4',
     'seaborn >= 0.11, < 0.12',
     'ipywidgets >= 7.6, < 7.7',
+    'openpyxl >= 3.0.7, < 3.0.8',
     'geopandas >= 0.9, < 1.0',
     'bokeh >= 2.3, <2.3.1'
 ] 
