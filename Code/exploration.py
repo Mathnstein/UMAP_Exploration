@@ -1,64 +1,137 @@
+print('Be patient, loading UMAP is kind of slow...')
 import numpy as np
-import umap
 import pandas as pd
 import seaborn as sns
+import tkinter as tk
 from sklearn.datasets import load_digits, load_iris
 from sklearn.manifold import TSNE
 import matplotlib.pyplot as plt
+import umap
+from utils import hopkins
 
-## Iris Dataset
+def iris_analysis():
+    iris = load_iris()
 
-iris = load_iris()
-iris_df = pd.DataFrame(iris.data, columns=iris.feature_names)
-iris_df['species'] = pd.Series(iris.target).map(dict(zip(range(3),iris.target_names)))
+    # Setup the group variable, visualize the distributions pairwise
+    iris_df = pd.DataFrame(iris.data, columns=iris.feature_names)
+    nTargets = len(iris.target_names)
+    iris_df['species'] = pd.Series(iris.target).map(dict(zip(range(nTargets),iris.target_names)))
+    sns.pairplot(iris_df, hue='species')
 
-sns.pairplot(iris_df, hue='species')
+    # Check if clustering makes sense with hopkins, values close to 1 mean clusters likely exist
+    H = hopkins(iris.data)
+    print(f'The Hopkins Stat for Iris is {H}.')
+    if H > .5:
+        print('There is statistical support that clusters exist within the data.')
+    else:
+        print('There is no statistical support from Hopkins to support clustering.')
+
+    # Umap on Iris
+    umap_instance = umap.UMAP()
+    umap_fit = umap_instance.fit_transform(iris.data)
+
+    # TSNE on Iris
+    tsne_instance = TSNE(n_components=2, perplexity=50)
+    tsne_fit = tsne_instance.fit_transform(iris.data)
+
+    # Check our 2D projections for clusters
+    H_umap = hopkins(umap_fit)
+    H_tsne = hopkins(tsne_fit)
+    print(f'Hopkins statistics for UMAP: {H_umap}, TSNE: {H_tsne}')
 
 
-# Umap on Iris
-umap_instance = umap.UMAP()
-umap_fit = umap_instance.fit_transform(iris.data)
+    fig, axs = plt.subplots(1, 2)
+    fig.suptitle('Iris Data')
+    axs[0].scatter(umap_fit[:, 0], umap_fit[:, 1], c=[sns.color_palette()[x] for x in iris.target])
+    axs[0].set_aspect('equal', 'datalim')
+    axs[0].set_title('UMAP', fontsize=16)
 
-# TSNE on Iris
-tsne_instance = TSNE(n_components=2, perplexity=50)
-tsne_fit = tsne_instance.fit_transform(iris.data)
+    axs[1].scatter(tsne_fit[:, 0], tsne_fit[:, 1], c=[sns.color_palette()[x] for x in iris.target])
+    axs[1].set_aspect('equal', 'datalim')
+    axs[1].set_title('TSNE', fontsize=16)
+    plt.show(block = False)
+    print('********************************************************************************************')
 
-fig, axs = plt.subplots(1, 2)
-fig.suptitle('Iris Data')
-axs[0].scatter(umap_fit[:, 0], umap_fit[:, 1], c=[sns.color_palette()[x] for x in iris.target])
-axs[0].set_aspect('equal', 'datalim')
-axs[0].set_title('UMAP', fontsize=16)
+def digits_analysis():
+    digits = load_digits()
 
-axs[1].scatter(tsne_fit[:, 0], tsne_fit[:, 1], c=[sns.color_palette()[x] for x in iris.target])
-axs[1].set_aspect('equal', 'datalim')
-axs[1].set_title('TSNE', fontsize=16)
+    # Setup the group variable, visualize the distributions pairwise
+    digits_df = pd.DataFrame(digits.data, columns=digits.feature_names)
+    nTargets = len(digits.target_names)
+    digits_df['number'] = pd.Series(digits.target).map(dict(zip(range(nTargets),digits.target_names)))
+    avg_pixel_val = digits_df.groupby('number').mean()
 
-## Digits Dataset
+    divisions = np.arange(0, 64, 8)[1:]
+    xlabels = np.tile(np.arange(0,8), 8)
+    fig, axs = plt.subplots(5, 2, sharex=True, sharey=True)
+    fig.suptitle('Unrolled average pixel intensity for 8x8 numbers')
+    for (number, vals), ax in zip(avg_pixel_val.iterrows(), axs.flatten()):
+        ax.plot(vals)
+        for x in divisions:
+            ax.axvline(x, c='k')
+        ax.set_title(number)
+        ax.set_xticklabels(xlabels)
 
-digits = load_digits()
-fig, ax_array = plt.subplots(20, 20)
-axes = ax_array.flatten()
-for i, ax in enumerate(axes):
-    ax.imshow(digits.images[i], cmap='gray_r')
-plt.setp(axes, xticks=[], yticks=[], frame_on=False)
-plt.tight_layout(h_pad=0.5, w_pad=0.01)
+    # Check if clustering makes sense with hopkins, values close to 1 mean clusters likely exist
+    H = hopkins(digits.data)
+    print(f'The Hopkins Stat for Digits is {H}.')
+    if H > .5:
+        print('There is statistical support that clusters exist within the data.')
+    else:
+        print('There is no statistical support from Hopkins to support clustering.')
 
-# Umap Vs TSNE on Digits
-reducer = umap.UMAP(random_state=42)
-reducer.fit(digits.data)
-embedding = reducer.transform(digits.data)
+    # Umap Vs TSNE on Digits
+    reducer = umap.UMAP(random_state=42)
+    reducer.fit(digits.data)
+    umap_fit = reducer.transform(digits.data)
 
-tsne_instance = TSNE(n_components=2, perplexity=50)
-tsne_fit = tsne_instance.fit_transform(digits.data)
-# Verify that the result of calling transform is
-# idenitical to accessing the embedding_ attribute
-assert(np.all(embedding == reducer.embedding_))
-fig, axs = plt.subplots(1, 2)
-fig.suptitle('Digits Data')
-axs[0].scatter(embedding[:, 0], embedding[:, 1], c=digits.target, cmap='Spectral', s=5)
-axs[0].set_title('UMAP', fontsize=16)
+    tsne_instance = TSNE(n_components=2, perplexity=50)
+    tsne_fit = tsne_instance.fit_transform(digits.data)
 
-axs[1].scatter(tsne_fit[:, 0], tsne_fit[:, 1], c=digits.target, cmap='Spectral', s=5)
-# fig.colorbar(boundaries=np.arange(11)-0.5).set_ticks(np.arange(10), ax=axs[1])
-axs[1].set_title('TSNE', fontsize=16)
-plt.show()
+    # Check our 2D projections for clusters
+    H_umap = hopkins(umap_fit)
+    H_tsne = hopkins(tsne_fit)
+    print(f'Hopkins statistics for UMAP: {H_umap}, TSNE: {H_tsne}')
+
+    # Verify that the result of calling transform is
+    # idenitical to accessing the embedding_ attribute
+    assert(np.all(umap_fit == reducer.embedding_))
+    fig, axs = plt.subplots(1, 2)
+    fig.suptitle('Digits Data')
+    axs[0].scatter(umap_fit[:, 0], umap_fit[:, 1], c=digits.target, cmap='Spectral', s=5)
+    axs[0].set_title('UMAP', fontsize=16)
+
+    axs[1].scatter(tsne_fit[:, 0], tsne_fit[:, 1], c=digits.target, cmap='Spectral', s=5)
+    axs[1].set_title('TSNE', fontsize=16)
+    plt.show(block = False)
+    print('********************************************************************************************')
+
+if __name__ == '__main__':
+    # Setup popup dialogs
+    root = tk.Tk()
+    root.withdraw()
+
+    msg_box = tk.messagebox.askyesnocancel('Iris dialog', 'Do you want to see the Iris data analysis?', icon='warning')
+    if msg_box:
+        print('Running Iris analysis.....')
+        iris_analysis()
+    elif msg_box is None:
+        # User canceled
+        print('Exiting...')
+        root.destroy()
+        quit()
+
+    msg_box = tk.messagebox.askyesnocancel('Digits dialog', 'Do you want to see the Digits data analysis?', icon='warning')
+    if msg_box:
+        print('Running Digits analysis.....')
+        digits_analysis()
+    elif msg_box is None:
+        # User canceled
+        print('Exiting...')
+        root.destroy()
+        quit()
+
+    msg_box = tk.messagebox.showinfo('Exit dialog', 'Press ok to close all plots and exit the app.')
+    if msg_box:
+        root.destroy()
+        quit()
