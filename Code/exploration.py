@@ -9,6 +9,8 @@ import matplotlib.pyplot as plt
 import umap
 from utils import hopkins
 
+HOPKINS_THRESHOLD = 0.7
+
 def iris_analysis():
     iris = load_iris()
 
@@ -21,7 +23,7 @@ def iris_analysis():
     # Check if clustering makes sense with hopkins, values close to 1 mean clusters likely exist
     H = hopkins(iris.data)
     print(f'The Hopkins Stat for Iris is {H}.')
-    if H > .5:
+    if H > HOPKINS_THRESHOLD:
         print('There is statistical support that clusters exist within the data.')
     else:
         print('There is no statistical support from Hopkins to support clustering.')
@@ -39,16 +41,28 @@ def iris_analysis():
     H_tsne = hopkins(tsne_fit)
     print(f'Hopkins statistics for UMAP: {H_umap}, TSNE: {H_tsne}')
 
-
     fig, axs = plt.subplots(1, 2)
     fig.suptitle('Iris Data')
-    axs[0].scatter(umap_fit[:, 0], umap_fit[:, 1], c=[sns.color_palette()[x] for x in iris.target])
-    axs[0].set_aspect('equal', 'datalim')
-    axs[0].set_title('UMAP', fontsize=16)
+    for sTarget in iris.target_names:
+        bKeep = (iris_df.species == sTarget).values
+        H_umap = hopkins(umap_fit[bKeep])
+        H_tsne = hopkins(tsne_fit[bKeep])
+        print(f'{sTarget} species Hopkins statistics for UMAP: {H_umap}, TSNE: {H_tsne}')
+        if H_umap > HOPKINS_THRESHOLD:
+            print('UMAP suggests there may still be substructure for further clustering')
+        if H_tsne > HOPKINS_THRESHOLD:
+            print('TSNE suggests there may still be substructure for further clustering')
 
-    axs[1].scatter(tsne_fit[:, 0], tsne_fit[:, 1], c=[sns.color_palette()[x] for x in iris.target])
-    axs[1].set_aspect('equal', 'datalim')
-    axs[1].set_title('TSNE', fontsize=16)
+        axs[0].scatter(umap_fit[bKeep, 0], umap_fit[bKeep, 1], label=sTarget)
+        axs[0].set_aspect('equal', 'datalim')
+        axs[0].set_title('UMAP', fontsize=16)
+
+        axs[1].scatter(tsne_fit[bKeep, 0], tsne_fit[bKeep, 1], label=sTarget)
+        axs[1].set_aspect('equal', 'datalim')
+        axs[1].set_title('TSNE', fontsize=16)
+
+    for ax in axs:
+        ax.legend()
     plt.show(block = False)
     print('********************************************************************************************')
 
@@ -75,7 +89,7 @@ def digits_analysis():
     # Check if clustering makes sense with hopkins, values close to 1 mean clusters likely exist
     H = hopkins(digits.data)
     print(f'The Hopkins Stat for Digits is {H}.')
-    if H > .5:
+    if H > HOPKINS_THRESHOLD:
         print('There is statistical support that clusters exist within the data.')
     else:
         print('There is no statistical support from Hopkins to support clustering.')
@@ -93,16 +107,28 @@ def digits_analysis():
     H_tsne = hopkins(tsne_fit)
     print(f'Hopkins statistics for UMAP: {H_umap}, TSNE: {H_tsne}')
 
-    # Verify that the result of calling transform is
-    # idenitical to accessing the embedding_ attribute
-    assert(np.all(umap_fit == reducer.embedding_))
+    
     fig, axs = plt.subplots(1, 2)
     fig.suptitle('Digits Data')
-    axs[0].scatter(umap_fit[:, 0], umap_fit[:, 1], c=digits.target, cmap='Spectral', s=5)
-    axs[0].set_title('UMAP', fontsize=16)
+    for sTarget in digits.target_names:
+        bKeep = (digits_df.number == sTarget).values
+        H_umap = hopkins(umap_fit[bKeep])
+        H_tsne = hopkins(tsne_fit[bKeep])
+        print(f'{sTarget} species Hopkins statistics for UMAP: {H_umap}, TSNE: {H_tsne}')
+        if H_umap > HOPKINS_THRESHOLD:
+            print('UMAP suggests there may still be substructure for further clustering')
+        if H_tsne > HOPKINS_THRESHOLD:
+            print('TSNE suggests there may still be substructure for further clustering')
 
-    axs[1].scatter(tsne_fit[:, 0], tsne_fit[:, 1], c=digits.target, cmap='Spectral', s=5)
-    axs[1].set_title('TSNE', fontsize=16)
+
+        axs[0].scatter(umap_fit[bKeep, 0], umap_fit[bKeep, 1], label=sTarget, cmap='Spectral', s=5)
+        axs[0].set_title('UMAP', fontsize=16)
+
+        axs[1].scatter(tsne_fit[bKeep, 0], tsne_fit[bKeep, 1], label=sTarget, s=5)
+        axs[1].set_title('TSNE', fontsize=16)
+
+    for ax in axs:
+        ax.legend(ncol=2)
     plt.show(block = False)
     print('********************************************************************************************')
 
@@ -111,7 +137,7 @@ if __name__ == '__main__':
     root = tk.Tk()
     root.withdraw()
 
-    msg_box = tk.messagebox.askyesnocancel('Iris dialog', 'Do you want to see the Iris data analysis?', icon='warning')
+    msg_box = tk.messagebox.askyesnocancel('Iris dialog', 'Do you want to see the Iris data analysis?')
     if msg_box:
         print('Running Iris analysis.....')
         iris_analysis()
@@ -121,7 +147,7 @@ if __name__ == '__main__':
         root.destroy()
         quit()
 
-    msg_box = tk.messagebox.askyesnocancel('Digits dialog', 'Do you want to see the Digits data analysis?', icon='warning')
+    msg_box = tk.messagebox.askyesnocancel('Digits dialog', 'Do you want to see the Digits data analysis?')
     if msg_box:
         print('Running Digits analysis.....')
         digits_analysis()
