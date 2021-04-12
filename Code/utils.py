@@ -1,4 +1,3 @@
-import warnings
 import numpy as np
 from random import sample
 from sklearn.neighbors import NearestNeighbors
@@ -37,7 +36,6 @@ def hopkins(X: np.array):
     denom = np.sum(ujd) + np.sum(wjd)
     if denom == 0:
         raise RuntimeWarning('The Hopkins denominator was 0, cannot proceed')
-        H = np.nan
     else:
         H = np.sum(ujd) / denom
     return H
