@@ -5,11 +5,13 @@ import seaborn as sns
 import tkinter as tk
 from sklearn.datasets import load_digits, load_iris
 from sklearn.manifold import TSNE
+from sklearn.cluster import KMeans
 import matplotlib.pyplot as plt
 import umap
-from utils import hopkins
+from utils import hopkins, scale, average_hopkins
 
-HOPKINS_THRESHOLD = 0.7
+# Global Params
+alpha = 0.05 # Hopkins hypothesis alpha level
 
 def iris_analysis():
     iris = load_iris()
@@ -21,12 +23,8 @@ def iris_analysis():
     sns.pairplot(iris_df, hue='species')
 
     # Check if clustering makes sense with hopkins, values close to 1 mean clusters likely exist
-    H = hopkins(iris.data)
+    H = hopkins(iris.data, alpha=alpha)
     print(f'The Hopkins Stat for Iris is {H}.')
-    if H > HOPKINS_THRESHOLD:
-        print('There is statistical support that clusters exist within the data.')
-    else:
-        print('There is no statistical support from Hopkins to support clustering.')
 
     # Umap on Iris
     umap_instance = umap.UMAP()
@@ -39,7 +37,8 @@ def iris_analysis():
     # Check our 2D projections for clusters
     H_umap = hopkins(umap_fit)
     H_tsne = hopkins(tsne_fit)
-    print(f'Hopkins statistics for UMAP: {H_umap}, TSNE: {H_tsne}')
+    print('After projecting...')
+    print(f'UMAP: {H_umap}, TSNE: {H_tsne}')
 
     fig, axs = plt.subplots(1, 2)
     fig.suptitle('Iris Data')
@@ -47,11 +46,8 @@ def iris_analysis():
         bKeep = (iris_df.species == sTarget).values
         H_umap = hopkins(umap_fit[bKeep])
         H_tsne = hopkins(tsne_fit[bKeep])
-        print(f'{sTarget} species Hopkins statistics for UMAP: {H_umap}, TSNE: {H_tsne}')
-        if H_umap > HOPKINS_THRESHOLD:
-            print('UMAP suggests there may still be substructure for further clustering')
-        if H_tsne > HOPKINS_THRESHOLD:
-            print('TSNE suggests there may still be substructure for further clustering')
+        print(f'{sTarget} species Hopkins statistics')
+        print(f'UMAP: {H_umap}, TSNE: {H_tsne}')
 
         axs[0].scatter(umap_fit[bKeep, 0], umap_fit[bKeep, 1], label=sTarget)
         axs[0].set_aspect('equal', 'datalim')
@@ -89,10 +85,6 @@ def digits_analysis():
     # Check if clustering makes sense with hopkins, values close to 1 mean clusters likely exist
     H = hopkins(digits.data)
     print(f'The Hopkins Stat for Digits is {H}.')
-    if H > HOPKINS_THRESHOLD:
-        print('There is statistical support that clusters exist within the data.')
-    else:
-        print('There is no statistical support from Hopkins to support clustering.')
 
     # Umap Vs TSNE on Digits
     reducer = umap.UMAP(random_state=42)
@@ -105,7 +97,8 @@ def digits_analysis():
     # Check our 2D projections for clusters
     H_umap = hopkins(umap_fit)
     H_tsne = hopkins(tsne_fit)
-    print(f'Hopkins statistics for UMAP: {H_umap}, TSNE: {H_tsne}')
+    print('After projecting...')
+    print(f'UMAP: {H_umap}, TSNE: {H_tsne}')
 
     
     fig, axs = plt.subplots(1, 2)
@@ -114,12 +107,8 @@ def digits_analysis():
         bKeep = (digits_df.number == sTarget).values
         H_umap = hopkins(umap_fit[bKeep])
         H_tsne = hopkins(tsne_fit[bKeep])
-        print(f'{sTarget} species Hopkins statistics for UMAP: {H_umap}, TSNE: {H_tsne}')
-        if H_umap > HOPKINS_THRESHOLD:
-            print('UMAP suggests there may still be substructure for further clustering')
-        if H_tsne > HOPKINS_THRESHOLD:
-            print('TSNE suggests there may still be substructure for further clustering')
-
+        print(f'Number {sTarget} Hopkins statistics')
+        print(f'UMAP: {H_umap}, TSNE: {H_tsne}')
 
         axs[0].scatter(umap_fit[bKeep, 0], umap_fit[bKeep, 1], label=sTarget, cmap='Spectral', s=5)
         axs[0].set_title('UMAP', fontsize=16)
@@ -132,32 +121,22 @@ def digits_analysis():
     plt.show(block = False)
     print('********************************************************************************************')
 
+def kill_plots():
+    plt.close('all')
+
+def kill_window():
+    plt.close('all')
+    quit()
+
 if __name__ == '__main__':
     # Setup popup dialogs
     root = tk.Tk()
-    root.withdraw()
+    root.title('Hopkins Analyses')
+    root.geometry('300x150')
 
-    msg_box = tk.messagebox.askyesnocancel('Iris dialog', 'Do you want to see the Iris data analysis?')
-    if msg_box:
-        print('Running Iris analysis.....')
-        iris_analysis()
-    elif msg_box is None:
-        # User canceled
-        print('Exiting...')
-        root.destroy()
-        quit()
+    tk.Button(root, text='Run Iris Analysis', command=iris_analysis).grid(row=0, column=0, sticky=tk.W)
+    tk.Button(root, text='Run Digits Analysis', command=digits_analysis).grid(row=0, column=1, sticky=tk.E)
+    tk.Button(root, text='Close all plots', command=kill_plots).grid(row=1,column=0, sticky=tk.W)
+    tk.Button(root, text='Quit...', command=kill_window).grid(row=2,column=0, sticky=tk.W)
 
-    msg_box = tk.messagebox.askyesnocancel('Digits dialog', 'Do you want to see the Digits data analysis?')
-    if msg_box:
-        print('Running Digits analysis.....')
-        digits_analysis()
-    elif msg_box is None:
-        # User canceled
-        print('Exiting...')
-        root.destroy()
-        quit()
-
-    msg_box = tk.messagebox.showinfo('Exit dialog', 'Press ok to close all plots and exit the app.')
-    if msg_box:
-        root.destroy()
-        quit()
+    root.mainloop()
